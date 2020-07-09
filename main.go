@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -24,9 +23,12 @@ func main() {
 	numPublishers := flag.Int("pubs", 2, "Number of publishers to start")
 	numSubscribers := flag.Int("subs", 20, "Number of subscribers to start")
 	startTracerNode := flag.Bool("tracer", false, "Start a tracer node")
+	metricsServer := flag.Bool("server", false, "Runs a metrics server with dashboard at :3000")
+	logReport := flag.Bool("log", false, "Shows metrics in console")
+
 	flag.Parse()
 
-	fmt.Println("Cleaning previous traces...")
+	log.Println("Cleaning previous traces...")
 	os.RemoveAll("./traces/")
 	os.Mkdir("./traces/", 0755)
 
@@ -35,7 +37,7 @@ func main() {
 		idch := make(chan string, 1)
 		go initTracer(idch)
 		tracerID := <-idch
-		fmt.Println("Initialized new tracer node with ID", tracerID)
+		log.Println("Initialized new tracer node with ID", tracerID)
 	}
 
 	// Starting publishers
@@ -60,16 +62,24 @@ func main() {
 		publishers[i].start("")
 	}
 
+	// Start metric recollection.
 	log.Println("Start reading logs...")
-	startReadingLogs()
+	startReadingLogs(*logReport, *metricsServer)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT)
 
 	select {
 	case <-stop:
-		// TODO: Close peers
+		// Close every publisher host
+		for _, v := range publishers {
+			v.host.Close()
+		}
+		// Close every subscriber host
+		for _, v := range publishers {
+			v.host.Close()
+		}
+
 		os.Exit(0)
 	}
-	// TODO: Manage contexts.
 }

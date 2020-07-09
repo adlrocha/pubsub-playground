@@ -14,6 +14,7 @@ import (
 	ma "github.com/multiformats/go-multiaddr"
 )
 
+// Node structure
 type Node struct {
 	publisher bool
 	host      host.Host
@@ -23,6 +24,7 @@ type Node struct {
 	sub       *pubsub.Subscription
 }
 
+// PublishMessage simple structure. Could be expanded.
 type PublishMessage struct {
 	Msg       string
 	Timestamp int64
@@ -30,6 +32,8 @@ type PublishMessage struct {
 
 // DiscoveryInterval is how often we re-publish our mDNS records.
 const DiscoveryInterval = time.Hour
+
+// MsgDeliveryIntervaal time between msg publication for publishers
 const MsgDeliveryInterval = 5
 
 // DiscoveryServiceTag is used in our mDNS advertisements to discover other chat peers.
@@ -56,9 +60,11 @@ func createNode(publisher bool, tracerID string) *Node {
 		if err != nil {
 			fmt.Println("Couldn't start tracer")
 		}
+		// create a new PubSub service using the GossipSub router
 		ps, err = pubsub.NewGossipSub(ctx, h, pubsub.WithEventTracer(tracer))
 	} else { // If there is tracerID we are using a remote tracer node
 		// assuming that your tracer runs in x.x.x.x and has a peer ID of QmTracer
+		// TODO: Support for tracer nodes is not completed.
 		pi, err := peer.AddrInfoFromP2pAddr(ma.StringCast(tracerID))
 		if err != nil {
 			panic(err)
@@ -68,9 +74,9 @@ func createNode(publisher bool, tracerID string) *Node {
 		if err != nil {
 			panic(err)
 		}
+		// create a new PubSub service using the GossipSub router
 		ps, err = pubsub.NewGossipSub(ctx, h, pubsub.WithEventTracer(tracer))
 	}
-	// create a new PubSub service using the GossipSub router
 
 	if err != nil {
 		panic(err)
@@ -90,10 +96,11 @@ func createNode(publisher bool, tracerID string) *Node {
 	}
 }
 
+// Start a node with a publisher or subscriber role and subscribed to a single topic.
 func (n *Node) start(topic string) {
 	if n.publisher {
 		var err error
-		// create new topic
+		// create new topic with the id of the publisher
 		n.topic, err = n.ps.Join(n.host.ID().Pretty())
 		if err != nil {
 			panic(err)
@@ -124,34 +131,50 @@ func (n *Node) start(topic string) {
 	}
 }
 
+// Start publisher loop for a node
 func (n *Node) publisherLoop() {
 	n.log("Starting publisher loop...")
-	for {
-		msg := PublishMessage{
-			Timestamp: time.Now().UnixNano(),
-			Msg:       fmt.Sprintf("Hello from %s", n.host.ID().Pretty()),
+	select {
+	case <-n.ctx.Done():
+		n.host.Close()
+		return
+	default:
+		for {
+			// Always send the same simple message.
+			msg := PublishMessage{
+				Timestamp: time.Now().UnixNano(),
+				Msg:       fmt.Sprintf("Hello from %s", n.host.ID().Pretty()),
+			}
+			n.log("Publishing new message...")
+			msgBytes, _ := json.Marshal(msg)
+			// Publish message to topic
+			n.topic.Publish(n.ctx, msgBytes)
+			time.Sleep(MsgDeliveryInterval * time.Second)
 		}
-		n.log("Publishing new message...")
-		msgBytes, _ := json.Marshal(msg)
-		n.topic.Publish(n.ctx, msgBytes)
-		time.Sleep(MsgDeliveryInterval * time.Second)
 	}
 }
 
+// Start subscriber loop for a node.
 func (n *Node) subscriberLoop() {
 	n.log("Starting subscriber loop...")
-	for {
-		msg, err := n.sub.Next(n.ctx)
-		if err != nil {
-			n.log(fmt.Sprintf("Received error in subscriber: %v", err))
-		}
-		if msg.ReceivedFrom == n.host.ID() {
-			n.log("This message is mine")
-		}
-		cm := new(PublishMessage)
-		err = json.Unmarshal(msg.Data, cm)
-		if err != nil {
-			continue
+	select {
+	case <-n.ctx.Done():
+		n.host.Close()
+		return
+	default:
+		for {
+			msg, err := n.sub.Next(n.ctx)
+			if err != nil {
+				n.log(fmt.Sprintf("Received error in subscriber: %v", err))
+			}
+			if msg.ReceivedFrom == n.host.ID() {
+				n.log("This message is mine")
+			}
+			cm := new(PublishMessage)
+			err = json.Unmarshal(msg.Data, cm)
+			if err != nil {
+				continue
+			}
 		}
 	}
 }

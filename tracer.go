@@ -1,5 +1,8 @@
 package main
 
+// Disclaimer: All of the code from this file (except a few addition to glue with my code)
+// has been extracted from "github.com/libp2p/go-libp2p-pubsub-tracer/"
+
 import (
 	"context"
 	"flag"
@@ -20,6 +23,7 @@ import (
 	"github.com/libp2p/go-libp2p-pubsub-tracer/traced"
 )
 
+// Initialize tracer distributed node.
 func initTracer(idch chan string) {
 	port := 4001
 	id := "identity"
@@ -43,6 +47,7 @@ func initTracer(idch chan string) {
 		log.Fatal(err)
 	}
 
+	// Id from public key
 	pid, err := peer.IDFromPublicKey(privkey.GetPublic())
 	if err != nil {
 		log.Fatal(err)
