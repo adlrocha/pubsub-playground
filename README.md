@@ -47,7 +47,7 @@ changes over time (from boot to stability).
 * See the average delay of messages from publishers to subscribers, and the rate of "useful" 
 and "control" messages in the system.
 
-### TODO
+### Future Work
 There are a bunch of other things that could be added to this tool (and that I wish to be able to try
 in the future):
 * Dynamic number of publishers and subscribers (so we can dynamically include new nodes to the network).
