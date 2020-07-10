@@ -56,3 +56,7 @@ in the future):
 * (And this is a cool one!) With the data collected we could build a heat map to see the exchange of messages between different nodes.
 
 And many more things I may keep adding to this README and (maybe) start implementing in my spare time.
+
+### References
+* https://github.com/libp2p/go-libp2p-pubsub#tracing
+* https://github.com/libp2p/go-libp2p-pubsub-tracer
