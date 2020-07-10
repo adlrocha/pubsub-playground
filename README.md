@@ -14,8 +14,8 @@ generated from the data available. There are two ways of dumping the computed me
 anyone can subscribe to the socket and periodically receive updates of the metrics collected in the network.
 In the server, along with the websocket, a simple dashboard is provided at `http://localhost:3000` so you can
 visually see the evolution of your network metrics.
-* Finally, some tests have been performed running a Tracer Node in case instead of using a JSONTracer
-to collect the local view of each node in the network, you want to use the specific node as "aggregator" of
+* Finally, some tests have been performed running a Tracer Node so instead of using a JSONTracer
+to collect the local view of each node in the network, you can use a specific node as "aggregator" of
 nodes traces. The tracer node will be responsible for collecting and processing the data traced from nodes. 
 (The tracer node is not completely
 supported by the application, and right now you can only choose to run the node and see how it collects the data
@@ -33,10 +33,10 @@ $ ./pubsub-playground -pubs 2 -subs 30 -server -log
 ```
 
 ### Why do I need this?
-So what is this tool for? What kind of learning can you take from it? You may be wondering. 
+So what is this tool for? What kind of learning can you take from it?
 In my case it has
 been really fun to implement and play with it, and in your case it can be a great
-tool to understand how GossipSub works and behaves with networks of different size. 
+tool to understand how GossipSub works and behaves with networks of different sizes. 
 With GossipSub Playground you will be able to:
 * See the type of messages exchanged in a GossipSub network, and the amount of them
 required to deliver messages to subscribers.
@@ -44,6 +44,8 @@ required to deliver messages to subscribers.
 and subscribers.
 * Realize how the average delay of delivery of messages behaves, and understand how this metrics
 changes over time (from boot to stability).
+* See the average delay of messages from publishers to subscribers, and the rate of "useful" 
+and "control" messages in the system.
 
 ### TODO
 There are a bunch of other things that could be added to this tool (and that I wish to be able to try
