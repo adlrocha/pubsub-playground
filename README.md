@@ -2,7 +2,7 @@
 Simple project to see [GossipSub](https://github.com/libp2p/specs/tree/master/pubsub/gossipsub) in action.
 The application runs a libp2p network with a number of publishers and subscribers. Every publisher
 node periodically publishes messages into a topic with the same ID of his PeerID, while subscribers
-randomly subscribe to one of the available topics, and read messages sent by the topic's corresponding
+randomly subscribe to one of the available topics, and read the messages sent by the topic's corresponding
 publisher.
 
 ![](ui/dashboard.png)
